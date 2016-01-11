@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'router',
+  name: 'evaisse:router',
   version: '0.0.1',
   // Brief, one-line summary of the package.
   summary: 'A Meteor hash location based router',
