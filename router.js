@@ -1,26 +1,29 @@
 
 
+
+const _namedParam = /:(\w)+/g;
+const _splatParam = /\*(\w)+/g;
+
+
 /**
  * [Router description]
  * @param {[type]} base [description]
  */
-Router = function (base) {
+Router = class BaseRouter {
 
-    var _namedParam = /:(\w)+/g,
-        _splatParam = /\*(\w)+/g,
-        self = this,
-        getHash;
 
-    self._routes = {};
-    self.base = base ? base : '/';
+    constructor(base = "/") {
+        this._routes = {};
+        this.base = base;
+        this.getHash = () => {
+            return window.location.hash ? window.location.hash.substr(1) : "/";
+        };
+    }
 
-    getHash = function () {
-        return window.location.hash ? window.location.hash.substr(1) : "/";
-    };
 
-    self.add = function (route, constrains, callback) {
+    add(route, constrains, callback) {
 
-        var handler;
+        let handler;
 
         if (!callback) {
             callback = constrains;
@@ -31,28 +34,28 @@ Router = function (base) {
             throw new Error('[Router] A route needs to be defined');
         }
 
-        if (!self._routes[route]) {
-            self._routes[route] = RouteParser.parse(route, constrains);
-            self._routes[route].handlers = [];
+        if (!this._routes[route]) {
+            this._routes[route] = RouteParser.parse(route, constrains);
+            this._routes[route].handlers = [];
         }
 
-        self._routes[route].handlers.push(callback);
-    };
+        this._routes[route].handlers.push(callback);
+    }
 
-    self.dispatch = function (path) {
-
-        console.log("[Router] dispatch", path);
+    dispatch(path) {
 
         var founds = [];
 
-        Object.keys(self._routes).forEach(function (k) {
-            var route = self._routes[k],
+        window.console && console.log("[Router] dispatch", path);
+
+        Object.keys(this._routes).forEach(k => {
+
+            var route = this._routes[k],
                 callbacks,
                 req,
                 params = {};
 
-            console.log("[Router]", "test", route.regex, path);
-
+            window.console && console.log("[Router]", "test", route.regex, path);
 
             params = route.exec(path);
 
@@ -66,24 +69,34 @@ Router = function (base) {
                     params: params,
             });
 
-            route.handlers.forEach(function (callback) {
+            route.handlers.forEach(callback => {
                 callback(Session.get('route'));
             });
             
         });
 
         if (!founds.length) {
-            throw new Error("404");
+            window.console && console.error('[Router]', 'Not Found, looking for', `"${path}"`, 'against', this._routes);
+            throw new Error("404", this._routes);
         }
 
 
-    };
+    }
 
-    self.setup = function () {
-        window.addEventListener('hashchange', function () {
-            self.dispatch(getHash());
+
+    setup() {
+
+        if (this.isSetup) {
+            return false;
+        }
+        this.isSetup = true;
+        window.addEventListener('hashchange', () => {
+            this.dispatch(this.getHash());
         });
-        self.dispatch(getHash());
+        this.dispatch(this.getHash());
     };
 
 };
+
+
+
