@@ -69,9 +69,9 @@ Router = class BaseRouter {
                     params: params,
             });
 
-            route.handlers.forEach(callback => {
+            for (let callback of route.handlers) {
                 callback(Session.get('route'));
-            });
+            }
             
         });
 
